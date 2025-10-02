@@ -42,7 +42,7 @@ module.exports = {
                 await staff.save();
                 return interaction.editReply(`Added ${user.username} as ${role}.`);
             } catch (error) {
-                console.error(error);
+                console.error('Error adding staff member:', error);
                 return interaction.editReply({ content: 'Error adding staff member.', ephemeral: true });
             }
         } else if (subcommand === 'remove') {
@@ -54,7 +54,7 @@ module.exports = {
                 }
                 return interaction.editReply(`Removed ${user.username} from staff.`);
             } catch (error) {
-                console.error(error);
+                console.error('Error removing staff member:', error);
                 return interaction.editReply({ content: 'Error removing staff member.', ephemeral: true });
             }
         } else if (subcommand === 'list') {
@@ -66,7 +66,7 @@ module.exports = {
                 const listString = staffList.map(s => `${s.name} - ${s.role}`).join('\n');
                 return interaction.editReply(`Active Staff Members:\n${listString}`);
             } catch (error) {
-                console.error(error);
+                console.error('Error fetching staff list:', error);
                 return interaction.editReply({ content: 'Error fetching staff list.', ephemeral: true });
             }
         }

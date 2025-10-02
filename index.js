@@ -1,6 +1,25 @@
 // index.js
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const mongoose = require('mongoose');
+
+if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI environment variable is not set. Please set it to your MongoDB connection string.');
+    process.exit(1);
+}
+
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+});
+
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => {
+    console.log('Connected to MongoDB with Mongoose');
+}).catch(error => {
+    console.error('Error connecting to MongoDB:', error);
+    process.exit(1);
+});
 const express = require('express');
 const fs = require('fs');
 require('dotenv').config();
