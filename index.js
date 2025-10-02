@@ -1,6 +1,7 @@
 // index.js
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const mongoose = require('mongoose');
+const express = require('express');
 const fs = require('fs');
 require('dotenv').config();
 
@@ -46,6 +47,18 @@ client.on('interactionCreate', async interaction => {
         console.error(error);
         await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
+});
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Simple health check endpoint for web service compatibility
+app.get('/', (req, res) => {
+    res.send('Discord bot is running');
+});
+
+app.listen(PORT, () => {
+    console.log(`Express server listening on port ${PORT}`);
 });
 
 client.login(process.env.DISCORD_TOKEN);
