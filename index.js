@@ -31,8 +31,17 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
+
+    // Register slash commands
+    const commands = client.commands.map(command => command.data.toJSON());
+    try {
+        await client.application.commands.set(commands);
+        console.log('Successfully registered application commands.');
+    } catch (error) {
+        console.error('Error registering commands:', error);
+    }
 });
 
 client.on('interactionCreate', async interaction => {
