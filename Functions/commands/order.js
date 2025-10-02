@@ -1,6 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const OrderTicket = require('../models/orderTicket');
 const Staff = require('../models/staff');
+const { hasAllowedRole } = require('../utils/roleCheck');
+
+const ADMIN_ROLES = ['Admin', 'Manager']; // Roles allowed to use admin commands
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,14 +13,22 @@ module.exports = {
         .addStringOption(option => option.setName('items').setDescription('Items in format: name:qty:price;name:qty:price').setRequired(true))
         .addStringOption(option => option.setName('notes').setDescription('Additional notes').setRequired(false)),
     async execute(interaction) {
+        await interaction.deferReply();
         const customer = interaction.options.getString('customer');
         const itemsString = interaction.options.getString('items');
         const notes = interaction.options.getString('notes') || '';
 
+        // Check if user has admin role for admin commands
+        const isAdmin = hasAllowedRole(interaction.member, ADMIN_ROLES);
+
+        if (!isAdmin) {
+            return interaction.editReply({ content: 'You do not have permission to use this command.', ephemeral: true });
+        }
+
         try {
             const staff = await Staff.findOne({ userId: interaction.user.id });
             if (!staff) {
-                return interaction.reply({ content: 'You are not a staff member.', ephemeral: true });
+                return interaction.editReply({ content: 'You are not a staff member.', ephemeral: true });
             }
 
             // Parse items: name:qty:price;name:qty:price
@@ -27,7 +38,7 @@ module.exports = {
             for (const part of itemParts) {
                 const [name, qty, price] = part.split(':');
                 if (!name || !qty || !price) {
-                    return interaction.reply({ content: 'Invalid item format. Use name:qty:price;name:qty:price', ephemeral: true });
+                    return interaction.editReply({ content: 'Invalid item format. Use name:qty:price;name:qty:price', ephemeral: true });
                 }
                 const quantity = parseInt(qty);
                 const itemPrice = parseFloat(price);
@@ -43,10 +54,10 @@ module.exports = {
                 notes
             });
             await order.save();
-            return interaction.reply(`Order ticket created for ${customer}. Total: $${total.toFixed(2)}`);
+            return interaction.editReply(`Order ticket created for ${customer}. Total: $${total.toFixed(2)}`);
         } catch (error) {
             console.error(error);
-            return interaction.reply({ content: 'Error creating order ticket.', ephemeral: true });
+            return interaction.editReply({ content: 'Error creating order ticket.', ephemeral: true });
         }
     }
 };

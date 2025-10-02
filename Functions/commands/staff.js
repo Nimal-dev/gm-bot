@@ -1,5 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const Staff = require('../models/staff');
+const { hasAllowedRole } = require('../utils/roleCheck');
+
+const ADMIN_ROLES = ['Admin', 'Manager']; // Roles allowed to use admin commands
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -26,10 +29,19 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
         const subcommand = interaction.options.getSubcommand();
-        if (subcommand === 'add') {
-            const user = interaction.options.getUser('user');
-            const role = interaction.options.getString('role');
-            try {
+
+        // Check if user has admin role for admin commands
+        const isAdmin = hasAllowedRole(interaction.member, ADMIN_ROLES);
+
+        if (!isAdmin && (subcommand === 'add' || subcommand === 'remove')) {
+            return interaction.editReply({ content: 'You do not have permission to use this command.', ephemeral: true });
+        }
+
+        const user = interaction.options.getUser('user');
+        const role = interaction.options.getString('role');
+
+        try {
+            if (subcommand === 'add') {
                 const existing = await Staff.findOne({ userId: user.id });
                 if (existing) {
                     return interaction.editReply({ content: 'This user is already a staff member.', ephemeral: true });
@@ -41,34 +53,23 @@ module.exports = {
                 });
                 await staff.save();
                 return interaction.editReply(`Added ${user.username} as ${role}.`);
-            } catch (error) {
-                console.error('Error adding staff member:', error);
-                return interaction.editReply({ content: 'Error adding staff member.', ephemeral: true });
-            }
-        } else if (subcommand === 'remove') {
-            const user = interaction.options.getUser('user');
-            try {
+            } else if (subcommand === 'remove') {
                 const removed = await Staff.findOneAndDelete({ userId: user.id });
                 if (!removed) {
                     return interaction.editReply({ content: 'Staff member not found.', ephemeral: true });
                 }
                 return interaction.editReply(`Removed ${user.username} from staff.`);
-            } catch (error) {
-                console.error('Error removing staff member:', error);
-                return interaction.editReply({ content: 'Error removing staff member.', ephemeral: true });
-            }
-        } else if (subcommand === 'list') {
-            try {
+            } else if (subcommand === 'list') {
                 const staffList = await Staff.find({ isActive: true });
                 if (staffList.length === 0) {
                     return interaction.editReply('No active staff members found.');
                 }
                 const listString = staffList.map(s => `${s.name} - ${s.role}`).join('\n');
                 return interaction.editReply(`Active Staff Members:\n${listString}`);
-            } catch (error) {
-                console.error('Error fetching staff list:', error);
-                return interaction.editReply({ content: 'Error fetching staff list.', ephemeral: true });
             }
+        } catch (error) {
+            console.error('Error processing staff command:', error);
+            return interaction.editReply({ content: 'Error processing staff command.', ephemeral: true });
         }
     }
 };
