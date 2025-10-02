@@ -50,7 +50,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Simple health check endpoint for web service compatibility
 app.get('/', (req, res) => {
