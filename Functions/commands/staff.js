@@ -24,6 +24,7 @@ module.exports = {
                 .setDescription('List all staff members')
         ),
     async execute(interaction) {
+        await interaction.deferReply();
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === 'add') {
             const user = interaction.options.getUser('user');
@@ -31,7 +32,7 @@ module.exports = {
             try {
                 const existing = await Staff.findOne({ userId: user.id });
                 if (existing) {
-                    return interaction.reply({ content: 'This user is already a staff member.', ephemeral: true });
+                    return interaction.editReply({ content: 'This user is already a staff member.', ephemeral: true });
                 }
                 const staff = new Staff({
                     userId: user.id,
@@ -39,34 +40,34 @@ module.exports = {
                     role: role,
                 });
                 await staff.save();
-                return interaction.reply(`Added ${user.username} as ${role}.`);
+                return interaction.editReply(`Added ${user.username} as ${role}.`);
             } catch (error) {
                 console.error(error);
-                return interaction.reply({ content: 'Error adding staff member.', ephemeral: true });
+                return interaction.editReply({ content: 'Error adding staff member.', ephemeral: true });
             }
         } else if (subcommand === 'remove') {
             const user = interaction.options.getUser('user');
             try {
                 const removed = await Staff.findOneAndDelete({ userId: user.id });
                 if (!removed) {
-                    return interaction.reply({ content: 'Staff member not found.', ephemeral: true });
+                    return interaction.editReply({ content: 'Staff member not found.', ephemeral: true });
                 }
-                return interaction.reply(`Removed ${user.username} from staff.`);
+                return interaction.editReply(`Removed ${user.username} from staff.`);
             } catch (error) {
                 console.error(error);
-                return interaction.reply({ content: 'Error removing staff member.', ephemeral: true });
+                return interaction.editReply({ content: 'Error removing staff member.', ephemeral: true });
             }
         } else if (subcommand === 'list') {
             try {
                 const staffList = await Staff.find({ isActive: true });
                 if (staffList.length === 0) {
-                    return interaction.reply('No active staff members found.');
+                    return interaction.editReply('No active staff members found.');
                 }
                 const listString = staffList.map(s => `${s.name} - ${s.role}`).join('\n');
-                return interaction.reply(`Active Staff Members:\n${listString}`);
+                return interaction.editReply(`Active Staff Members:\n${listString}`);
             } catch (error) {
                 console.error(error);
-                return interaction.reply({ content: 'Error fetching staff list.', ephemeral: true });
+                return interaction.editReply({ content: 'Error fetching staff list.', ephemeral: true });
             }
         }
     }
