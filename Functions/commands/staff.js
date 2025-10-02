@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const Staff = require('../models/staff');
 const { hasAllowedRole } = require('../utils/roleCheck');
 
-const ADMIN_ROLES = ['Admin', 'Manager']; // Roles allowed to use admin commands
+const ADMIN_ROLES = ['Admin', '🌟 GM MANAGER 🌟']; // Roles allowed to use admin commands
 
 module.exports = {
     data: new SlashCommandBuilder()
